@@ -1,0 +1,8 @@
+## Interface: 80205
+## Title: Announce-iate
+## Author: Xylunara
+## Version: 0.1
+## SavedVariables: Announcements
+
+main.lua
+functions.lua
