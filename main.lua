@@ -7,7 +7,11 @@ local pageValue = 20
 frame:SetScript("OnEvent", function(self, event, addon)
 	if addon == "Announce-iate" then
 		if event == "ADDON_LOADED" then
-				if Announcements == nil then
+				if Announcments == nil then
+					Announcements = {}
+					SaveAnnouncements(Announcements)
+				end
+				if Announcements[PlayerClass] == nil then
 					CreateAnnouncementsVariable()
 				end
 				

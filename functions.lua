@@ -33,7 +33,6 @@ function DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)
 end
 
 function CreateAnnouncementsVariable()
-	Announcements = {}
 	Announcements[PlayerClass] = {}
 	Announcements[PlayerClass].Spell = {}
 	SaveAnnouncements(Announcements)
