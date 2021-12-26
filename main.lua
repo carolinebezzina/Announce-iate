@@ -8,10 +8,10 @@ frame:SetScript("OnEvent", function(self, event, addon)
 	if addon == "Announce-iate" then
 		if event == "ADDON_LOADED" then
 				if Announcments == nil then
-					Announcements = {}
-					SaveAnnouncements(Announcements)
+					CharAnnounce = {}
+					SaveAnnouncements(CharAnnounce)
 				end
-				if Announcements[PlayerClass] == nil then
+				if CharAnnounce[PlayerClass] == nil then
 					CreateAnnouncementsVariable()
 				end
 				
@@ -26,7 +26,7 @@ frame:SetScript("OnEvent", function(self, event, addon)
 		end
 		
 		if event == "PLAYER_LOGOUT" then
-			SaveAnnouncements(Announcements)
+			SaveAnnouncements(CharAnnounce)
 		end
 				
 		right:SetScript("OnClick", function()
@@ -53,7 +53,7 @@ local function InExcludeList (ExcludeList, SpellName)
     return false
 end
 
-function DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)
+local function DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)
 	local ExcludeList = {
 		"Auto Attack",
 		"Wartime Ability",
@@ -77,13 +77,13 @@ function DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)
 	return false
 end
 
-function CreateAnnouncementsVariable()
-	Announcements[PlayerClass] = {}
-	Announcements[PlayerClass].Spell = {}
-	SaveAnnouncements(Announcements)
+local function CreateAnnouncementsVariable()
+	CharAnnounce[PlayerClass] = {}
+	CharAnnounce[PlayerClass].Spell = {}
+	SaveAnnouncements(CharAnnounce)
 end
 
-function FetchAnnouncements()
+local function FetchAnnouncements()
 	local i = 1
 	while true do
 		local SpellName, SpellSubName = GetSpellBookItemName(i, BOOKTYPE_SPELL)
@@ -93,44 +93,44 @@ function FetchAnnouncements()
 		if GetSpellBookItemInfo(SpellName) then
 			local SkillType, SpellID = GetSpellBookItemInfo(SpellName)
 			if(DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)) then
-				Announcements[PlayerClass].Spell[SpellID] = {}
-				Announcements[PlayerClass].Spell[SpellID].SpellID = {}
-				Announcements[PlayerClass].Spell[SpellID].SpellName = {}
-				Announcements[PlayerClass].Spell[SpellID].Channel = {}
-				Announcements[PlayerClass].Spell[SpellID].Text = {}
-				Announcements[PlayerClass].Spell[SpellID].SpellID = SpellID
-				Announcements[PlayerClass].Spell[SpellID].SpellName = SpellName
-				Announcements[PlayerClass].Spell[SpellID].Channel = 
+				CharAnnounce[PlayerClass].Spell[SpellID] = {}
+				CharAnnounce[PlayerClass].Spell[SpellID].SpellID = {}
+				CharAnnounce[PlayerClass].Spell[SpellID].SpellName = {}
+				CharAnnounce[PlayerClass].Spell[SpellID].Channel = {}
+				CharAnnounce[PlayerClass].Spell[SpellID].Text = {}
+				CharAnnounce[PlayerClass].Spell[SpellID].SpellID = SpellID
+				CharAnnounce[PlayerClass].Spell[SpellID].SpellName = SpellName
+				CharAnnounce[PlayerClass].Spell[SpellID].Channel = 
 					{
 						Party = false,
 						Instance = false,
 						Say = false,
 						Emote = false
 					}
-				Announcements[PlayerClass].Spell[SpellID].Text = ""
+				CharAnnounce[PlayerClass].Spell[SpellID].Text = ""
 			end
 		end
 		i = i + 1
 	end
 
-	SaveAnnouncements(Announcements)
+	SaveAnnouncements(CharAnnounce)
 end
 
-function SaveAnnouncements(a)
-	_G[Announcements] = a
+local function SaveAnnouncements(a)
+	_G[CharAnnounce] = a
 end
 
-function Announce()
+local function Announce()
 	SpellCast_EventFrame = CreateFrame("Frame")
 	SpellCast_EventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 	SpellCast_EventFrame:SetScript("OnEvent",
 		function(self, event, unit, arg1, spellID, arg2, arg3)
-			if(unit == "player" and Announcements[PlayerClass].Spell[spellID]) then
-				for ii, c in pairs(Announcements[PlayerClass].Spell[spellID].Channel) do
+			if(unit == "player" and CharAnnounce[PlayerClass].Spell[spellID]) then
+				for ii, c in pairs(CharAnnounce[PlayerClass].Spell[spellID].Channel) do
 					if c == true then
 						if (ii ~= "Instance" or IsInGroup(LE_PARTY_CATEGORY_INSTANCE))
 						and (ii ~= "Party" or IsInGroup(LE_PARTY_CATEGORY_HOME)) then 
-							SendChatMessage(Announcements[PlayerClass].Spell[spellID].Text, ii)
+							SendChatMessage(CharAnnounce[PlayerClass].Spell[spellID].Text, ii)
 						end
 					end
 				end
@@ -194,7 +194,7 @@ local function CreateButtons(Config, PageValue)
 	
 end
 
-function CreateConfig(pageValue)
+local function CreateConfig(pageValue)
 	local Config = CreateFrame("Frame", "Announce-iate", UIParent)
 	Config:Hide()
 	Config.name = "Announce-iate"
@@ -212,10 +212,10 @@ function CreateConfig(pageValue)
 	SayValue = {}
 	CheckBox = {}
 	
-	if(Announcements[PlayerClass]) then
+	if(CharAnnounce[PlayerClass]) then
 		local a = 1
 
-		for i, s in pairs(Announcements[PlayerClass].Spell) do
+		for i, s in pairs(CharAnnounce[PlayerClass].Spell) do
 			local distanceFromTop = (-90 + (a - 1) * -20)
 			local pageNo = math.floor(a / 20)
 			distanceFromTop = distanceFromTop + ((pageNo * 20) * 20)
@@ -243,13 +243,13 @@ function CreateConfig(pageValue)
 			CheckBox[i] = {}
 			local x = 1
 			
-			for ii, ss in pairs(Announcements[PlayerClass].Spell[i].Channel) do
+			for ii, ss in pairs(CharAnnounce[PlayerClass].Spell[i].Channel) do
 				CheckBox[i][ii] = CreateFrame("CheckButton", nil, Config, "UICheckButtonTemplate")
 				CheckBox[i][ii]:SetPoint("TOPRIGHT", "Announce-iate", (-250 + (x - 1) * 70), 5 + distanceFromTop)
 				CheckBox[i][ii]:SetSize(27,27)
 				CheckBox[i][ii].text:SetText(ii)
 				
-				if(Announcements[PlayerClass].Spell[i].Channel[ii] == true) then
+				if(CharAnnounce[PlayerClass].Spell[i].Channel[ii] == true) then
 					CheckBox[i][ii]:SetChecked(true)
 				else
 					CheckBox[i][ii]:SetChecked(false)
@@ -266,29 +266,29 @@ function CreateConfig(pageValue)
 	end
 
 	Config.okay = function (self)
-		for i, s in pairs(Announcements[PlayerClass].Spell) do
-			Announcements[PlayerClass].Spell[i].Text = SayValue[i]:GetText()
-			for ii, ss in pairs(Announcements[PlayerClass].Spell[i].Channel) do
-				Announcements[PlayerClass].Spell[i].Channel[ii] = CheckBox[i][ii]:GetChecked()
+		for i, s in pairs(CharAnnounce[PlayerClass].Spell) do
+			CharAnnounce[PlayerClass].Spell[i].Text = SayValue[i]:GetText()
+			for ii, ss in pairs(CharAnnounce[PlayerClass].Spell[i].Channel) do
+				CharAnnounce[PlayerClass].Spell[i].Channel[ii] = CheckBox[i][ii]:GetChecked()
 			end
 		end
 	end
 	
 end
 
-function UpdateSpells(pageValue)
+local function UpdateSpells(pageValue)
 	local a = 1
-	for i, s in pairs(Announcements[PlayerClass].Spell) do
+	for i, s in pairs(CharAnnounce[PlayerClass].Spell) do
 		if a <= pageValue and a > pageValue - 20 then
 		SpellNameText[i]:Show()
 		SayValue[i]:Show()
-		for ii, ss in pairs(Announcements[PlayerClass].Spell[i].Channel) do
+		for ii, ss in pairs(CharAnnounce[PlayerClass].Spell[i].Channel) do
 			CheckBox[i][ii]:Show()
 			end
 			else
 				SpellNameText[i]:Hide()
 				SayValue[i]:Hide()
-		for ii, ss in pairs(Announcements[PlayerClass].Spell[i].Channel) do
+		for ii, ss in pairs(CharAnnounce[PlayerClass].Spell[i].Channel) do
 			CheckBox[i][ii]:Hide()
 			end
 		end
