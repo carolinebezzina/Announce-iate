@@ -25,25 +25,15 @@ local function UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
 	end
 end
 
-local function InExcludeList (ExcludeList, SpellName)
-    for index, value in ipairs(ExcludeList) do
-        if value == SpellName then
-            return true
-        end
-    end
-
-    return false
-end
-
 local function DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)
-	local ExcludeList = {
-		"Auto Attack",
-		"Wartime Ability",
-		"Garrison Ability",
-		"Combat Ally",
-		"Activate Empowerment",
-		"Sanity Restoration Orb",
-		"Construct Ability"		
+local ExcludeList = {
+        ["Auto Attack"] = true,
+        ["Wartime Ability"] = true,
+		["Garrison Ability"] = true,
+		["Combat Ally"] = true,
+		["Activate Empowerment"] = true,
+		["Sanity Restoration Orb"] = true,
+		["Construct Ability"] = true
 	}
 	if
 		SkillType == "SPELL"
@@ -51,7 +41,7 @@ local function DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)
 			or SpellSubName == "Racial")
 		and IsPassiveSpell(SpellID) == false
 		and IsSpellKnown(SpellID) == true
-		and InExcludeList(ExcludeList, SpellName) == false
+		and not ExcludeList[SpellName]
 	then
 		return true
 	end
