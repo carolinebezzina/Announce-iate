@@ -1,32 +1,12 @@
 local Announceiate = {};
 local frame = CreateFrame("FRAME");
 frame:RegisterEvent("ADDON_LOADED");
-frame:RegisterEvent("PLAYER_LOGOUT");
+frame:RegisterEvent("PLAYER_LOGIN");
 PlayerClass = UnitClass("player")
 local pageValue = 20
 
-local function UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
-	local a = 1
-	for i, s in pairs(Announceiate.Announcements[PlayerClass].Spell) do
-		if a <= pageValue and a > pageValue - 20 then
-		SpellNameText[i]:Show()
-		SayValue[i]:Show()
-		for ii, ss in pairs(Announceiate.Announcements[PlayerClass].Spell[i].Channel) do
-			CheckBox[i][ii]:Show()
-			end
-			else
-				SpellNameText[i]:Hide()
-				SayValue[i]:Hide()
-		for ii, ss in pairs(Announceiate.Announcements[PlayerClass].Spell[i].Channel) do
-			CheckBox[i][ii]:Hide()
-			end
-		end
-		a = a + 1
-	end
-end
-
 local function DisplaySpell(SpellName, SkillType, SpellSubName, SpellID)
-local ExcludeList = {
+	local ExcludeList = {
         ["Auto Attack"] = true,
         ["Wartime Ability"] = true,
 		["Garrison Ability"] = true,
@@ -49,7 +29,7 @@ local ExcludeList = {
 	return false
 end
 
-local function FetchAnnouncements()
+local function FetchSpells()
 	local i = 1
 	while true do
 		local SpellName, SpellSubName = GetSpellBookItemName(i, BOOKTYPE_SPELL)
@@ -80,26 +60,27 @@ local function FetchAnnouncements()
 	end
 end
 
-local function Announce()
-	local SpellCast_EventFrame = CreateFrame("Frame")
-	SpellCast_EventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-	SpellCast_EventFrame:SetScript("OnEvent",
-		function(self, event, unit, arg1, spellID, arg2, arg3)
-			if(unit == "player" and Announceiate.Announcements[PlayerClass].Spell[spellID]) then
-				for ii, c in pairs(Announceiate.Announcements[PlayerClass].Spell[spellID].Channel) do
-					if c == true then
-						if (ii ~= "Instance" or IsInGroup(LE_PARTY_CATEGORY_INSTANCE))
-						and (ii ~= "Party" or IsInGroup(LE_PARTY_CATEGORY_HOME)) then 
-							SendChatMessage(Announceiate.Announcements[PlayerClass].Spell[spellID].Text, ii)
-						end
-					end
-				end
+local function UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
+	local a = 1
+	for i, s in pairs(Announceiate.Announcements[PlayerClass].Spell) do
+		if a <= pageValue and a > pageValue - 20 then
+			SpellNameText[i]:Show()
+			SayValue[i]:Show()
+			for ii, ss in pairs(Announceiate.Announcements[PlayerClass].Spell[i].Channel) do
+				CheckBox[i][ii]:Show()
 			end
-		end)
+		else
+			SpellNameText[i]:Hide()
+			SayValue[i]:Hide()
+			for ii, ss in pairs(Announceiate.Announcements[PlayerClass].Spell[i].Channel) do
+				CheckBox[i][ii]:Hide()
+			end
+		end
+		a = a + 1
+	end
 end
 
 local function CreateButtons(Config, PageValue, SpellNameText, SayValue, CheckBox)
-
 	local left = CreateFrame("Button", nil, Config)
 	left:SetPoint("BOTTOMLEFT", Config, "BOTTOMLEFT", 150, 20)
 	left:SetWidth(80)
@@ -153,17 +134,16 @@ local function CreateButtons(Config, PageValue, SpellNameText, SayValue, CheckBo
 	right:SetPushedTexture(ptex)
 	
 	right:SetScript("OnClick", function()
-	pageValue = pageValue + 20
-	UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
+		pageValue = pageValue + 20
+		UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
 	end)
 	
 	left:SetScript("OnClick", function()
-	if pageValue > 20 then
-		pageValue = pageValue - 20
-		UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
-	end
+		if pageValue > 20 then
+			pageValue = pageValue - 20
+			UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
+		end
 	end)
-	
 end
 
 local function CreateConfig(pageValue, SpellNameText, SayValue, CheckBox)
@@ -230,8 +210,7 @@ local function CreateConfig(pageValue, SpellNameText, SayValue, CheckBox)
 			a = a + 1
 		end
 
-	CreateButtons(Config, pageValue, SpellNameText, SayValue, CheckBox)
-	
+		CreateButtons(Config, pageValue, SpellNameText, SayValue, CheckBox)
 	end
 
 	Config.okay = function (self)
@@ -242,32 +221,50 @@ local function CreateConfig(pageValue, SpellNameText, SayValue, CheckBox)
 			end
 		end
 	end
-	
 end
+
+local function Announce()
+	local SpellCast_EventFrame = CreateFrame("Frame")
+	SpellCast_EventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+	SpellCast_EventFrame:SetScript("OnEvent",
+	function(self, event, unit, arg1, spellID, arg2, arg3)
+		if(unit == "player" and Announceiate.Announcements[PlayerClass].Spell[spellID]) then
+			for ii, c in pairs(Announceiate.Announcements[PlayerClass].Spell[spellID].Channel) do
+				if c == true then
+					if (ii ~= "Instance" or IsInGroup(LE_PARTY_CATEGORY_INSTANCE))
+					and (ii ~= "Party" or IsInGroup(LE_PARTY_CATEGORY_HOME)) then 
+						SendChatMessage(Announceiate.Announcements[PlayerClass].Spell[spellID].Text, ii)
+					end
+				end
+			end
+		end
+	end)
+end
+
 
 frame:SetScript("OnEvent", function(self, event, addon)
 	if addon == "Announce-iate" then
 		if event == "ADDON_LOADED" then
-				if Announceiate.Announcements == nil then
-					Announceiate.Announcements = {}
-				end
-				if Announceiate.Announcements[PlayerClass] == nil then
-						Announceiate.Announcements[PlayerClass] = {}
-						Announceiate.Announcements[PlayerClass].Spell = {}
-				end
-				
-				FetchAnnouncements()
-				
-				local SpellNameText = {}
-				local SayValue = {}
-				local CheckBox = {}
-				
-				CreateConfig(pageValue, SpellNameText, SayValue, CheckBox)
-				
-				UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
-				
-				Announce()
+			if Announceiate.Announcements == nil then
+				Announceiate.Announcements = {}
 			end
 		end
 	end
-)
+	if event == "PLAYER_LOGIN" then
+		if Announceiate.Announcements[PlayerClass] == nil then
+			Announceiate.Announcements[PlayerClass] = {}
+			Announceiate.Announcements[PlayerClass].Spell = {}
+			FetchSpells()
+		end
+		
+		local SpellNameText = {}
+		local SayValue = {}
+		local CheckBox = {}
+		
+		CreateConfig(pageValue, SpellNameText, SayValue, CheckBox)
+		
+		UpdateSpells(pageValue, SpellNameText, SayValue, CheckBox)
+		
+		Announce()
+	end
+end)

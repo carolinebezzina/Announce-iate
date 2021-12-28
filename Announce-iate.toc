@@ -2,6 +2,6 @@
 ## Title: Announce-iate
 ## Author: Xylunara
 ## Version: 1.0
-## SavedVariables: Announcements
+## SavedVariables: Announceiate.Announcements
 
 main.lua
